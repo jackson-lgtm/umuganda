@@ -28,7 +28,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
         <main>{children}</main>
 
-        <footer style={{ borderTop: '1px solid var(--border)', background: 'var(--forest-dark)', color: 'rgba(255,255,255,0.6)' }} className="mt-24 py-12 text-center text-sm">
+        <footer style={{ borderTop: '1px solid var(--border)', background: 'var(--hero-bg)', color: 'rgba(255,255,255,0.75)' }} className="mt-24 py-12 text-center text-sm">
           <p style={{ fontFamily: 'Fraunces, serif', fontSize: '1.1rem', color: 'rgba(255,255,255,0.9)', marginBottom: '8px' }}>
             Umuganda
           </p>

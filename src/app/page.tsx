@@ -11,7 +11,7 @@ export default async function Home() {
   return (
     <div>
       {/* Hero */}
-      <section style={{ background: 'var(--forest-dark)' }} className="relative overflow-hidden">
+      <section style={{ background: 'var(--hero-bg)' }} className="relative overflow-hidden">
         <div className="max-w-5xl mx-auto px-5 py-24 sm:py-32 relative z-10">
           <div className="max-w-2xl">
             <p style={{ color: 'var(--amber)', fontFamily: 'DM Sans, sans-serif', fontSize: '0.8rem', letterSpacing: '0.12em', textTransform: 'uppercase', fontWeight: 500 }} className="mb-5">
@@ -47,8 +47,8 @@ export default async function Home() {
           </div>
         </div>
         {/* Decorative circle */}
-        <div style={{ position: 'absolute', right: '-80px', top: '-80px', width: '500px', height: '500px', borderRadius: '50%', background: 'var(--amber)', opacity: 0.12 }} />
-        <div style={{ position: 'absolute', right: '120px', bottom: '-120px', width: '300px', height: '300px', borderRadius: '50%', background: 'var(--terra)', opacity: 0.12 }} />
+        <div style={{ position: 'absolute', right: '-80px', top: '-80px', width: '500px', height: '500px', borderRadius: '50%', background: 'rgba(255,255,255,0.08)' }} />
+        <div style={{ position: 'absolute', right: '120px', bottom: '-120px', width: '300px', height: '300px', borderRadius: '50%', background: 'rgba(255,200,80,0.15)' }} />
       </section>
 
       {/* Live count strip */}
