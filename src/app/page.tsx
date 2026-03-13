@@ -47,8 +47,8 @@ export default async function Home() {
           </div>
         </div>
         {/* Decorative circle */}
-        <div style={{ position: 'absolute', right: '-80px', top: '-80px', width: '500px', height: '500px', borderRadius: '50%', background: 'var(--forest-light)', opacity: 0.2 }} />
-        <div style={{ position: 'absolute', right: '120px', bottom: '-120px', width: '300px', height: '300px', borderRadius: '50%', background: 'var(--amber)', opacity: 0.08 }} />
+        <div style={{ position: 'absolute', right: '-80px', top: '-80px', width: '500px', height: '500px', borderRadius: '50%', background: 'var(--amber)', opacity: 0.12 }} />
+        <div style={{ position: 'absolute', right: '120px', bottom: '-120px', width: '300px', height: '300px', borderRadius: '50%', background: 'var(--terra)', opacity: 0.12 }} />
       </section>
 
       {/* Live count strip */}
@@ -93,8 +93,8 @@ export default async function Home() {
               n: '03',
               title: 'You show up',
               body: 'No ongoing commitment. No schedule. No ego. You help when you can, as much as you want, because you want to.',
-              color: '#e8f4ee',
-              accent: 'var(--forest)',
+              color: '#fef9e8',
+              accent: 'var(--amber)',
             },
           ].map(({ n, title, body, color, accent }) => (
             <div key={n} style={{ background: color, borderRadius: '16px', padding: '28px' }}>
