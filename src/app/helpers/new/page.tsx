@@ -3,61 +3,76 @@ import { AREAS, SKILLS, AVAILABILITY, TIME_OPTIONS, LANGUAGES } from '@/lib/type
 
 export default function RegisterHelperPage() {
   return (
-    <div className="max-w-2xl mx-auto px-4 py-10">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">I want to help</h1>
-        <p className="text-stone-500">
-          Register once. We&apos;ll match you with needs near you when they come up.
+    <div className="max-w-2xl mx-auto px-5 py-12">
+      <div className="mb-10">
+        <p style={{ color: 'var(--forest)', fontSize: '0.8rem', letterSpacing: '0.1em', textTransform: 'uppercase', fontWeight: 500, marginBottom: '8px' }}>
+          Join the community
+        </p>
+        <h1 style={{ fontFamily: 'Fraunces, serif', fontSize: '2.4rem', fontWeight: 400, color: 'var(--forest-dark)', lineHeight: 1.1, marginBottom: '12px' }}>
+          I want to help
+        </h1>
+        <p style={{ color: 'var(--muted)', lineHeight: 1.6 }}>
+          Register once. We&apos;ll connect you with needs near you when they come up.
           No commitment — you decide when and how you show up.
         </p>
       </div>
 
       <form action={registerHelper} className="space-y-6">
         <div>
-          <label className="block text-sm font-medium mb-2">Your name *</label>
+          <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, marginBottom: '8px' }}>
+            Your name <span style={{ color: 'var(--terra)' }}>*</span>
+          </label>
           <input
             name="name"
             required
             placeholder="First name is fine"
-            className="w-full border border-stone-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-stone-500 bg-white"
+            style={{ width: '100%', border: '1px solid var(--border)', borderRadius: '12px', padding: '12px 16px', fontSize: '0.95rem', background: 'white', outline: 'none' }}
           />
         </div>
 
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium mb-2">WhatsApp *</label>
+            <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, marginBottom: '8px' }}>
+              WhatsApp <span style={{ color: 'var(--terra)' }}>*</span>
+            </label>
             <input
               name="whatsapp"
               required
               placeholder="+351..."
-              className="w-full border border-stone-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-stone-500 bg-white"
+              style={{ width: '100%', border: '1px solid var(--border)', borderRadius: '12px', padding: '12px 16px', fontSize: '0.95rem', background: 'white', outline: 'none' }}
             />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-2">Email</label>
+            <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, marginBottom: '8px' }}>
+              Email <span style={{ color: 'var(--muted)', fontWeight: 400 }}>(optional)</span>
+            </label>
             <input
               name="email"
               type="email"
               placeholder="your@email.com"
-              className="w-full border border-stone-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-stone-500 bg-white"
+              style={{ width: '100%', border: '1px solid var(--border)', borderRadius: '12px', padding: '12px 16px', fontSize: '0.95rem', background: 'white', outline: 'none' }}
             />
           </div>
         </div>
 
         <div>
-          <label className="block text-sm font-medium mb-2">Where are you based? *</label>
-          <select name="area" required className="w-full border border-stone-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-stone-500 bg-white">
+          <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, marginBottom: '8px' }}>
+            Where are you based? <span style={{ color: 'var(--terra)' }}>*</span>
+          </label>
+          <select name="area" required style={{ width: '100%', border: '1px solid var(--border)', borderRadius: '12px', padding: '12px 16px', fontSize: '0.9rem', background: 'white', outline: 'none' }}>
             <option value="">Select area</option>
             {AREAS.map(area => <option key={area} value={area}>{area}</option>)}
           </select>
         </div>
 
         <div>
-          <label className="block text-sm font-medium mb-2">What can you offer?</label>
+          <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, marginBottom: '10px' }}>
+            What can you offer?
+          </label>
           <div className="grid grid-cols-2 gap-2">
             {SKILLS.map(skill => (
-              <label key={skill} className="flex items-center gap-2 text-sm cursor-pointer">
-                <input type="checkbox" name="skills" value={skill} className="rounded" />
+              <label key={skill} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.875rem', cursor: 'pointer', padding: '8px 12px', border: '1px solid var(--border)', borderRadius: '10px', background: 'white' }}>
+                <input type="checkbox" name="skills" value={skill} style={{ accentColor: 'var(--forest)' }} />
                 {skill}
               </label>
             ))}
@@ -65,11 +80,13 @@ export default function RegisterHelperPage() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium mb-2">When are you available?</label>
+          <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, marginBottom: '10px' }}>
+            When are you available?
+          </label>
           <div className="grid grid-cols-2 gap-2">
             {AVAILABILITY.map(a => (
-              <label key={a} className="flex items-center gap-2 text-sm cursor-pointer">
-                <input type="checkbox" name="availability" value={a} className="rounded" />
+              <label key={a} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.875rem', cursor: 'pointer', padding: '8px 12px', border: '1px solid var(--border)', borderRadius: '10px', background: 'white' }}>
+                <input type="checkbox" name="availability" value={a} style={{ accentColor: 'var(--forest)' }} />
                 {a}
               </label>
             ))}
@@ -77,19 +94,23 @@ export default function RegisterHelperPage() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium mb-2">How much time can you give at once?</label>
-          <select name="time_per_session" className="w-full border border-stone-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-stone-500 bg-white">
+          <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, marginBottom: '8px' }}>
+            How much time can you give at once?
+          </label>
+          <select name="time_per_session" style={{ width: '100%', border: '1px solid var(--border)', borderRadius: '12px', padding: '12px 16px', fontSize: '0.9rem', background: 'white', outline: 'none' }}>
             <option value="">Select</option>
             {TIME_OPTIONS.map(t => <option key={t} value={t}>{t}</option>)}
           </select>
         </div>
 
         <div>
-          <label className="block text-sm font-medium mb-2">Languages</label>
-          <div className="flex flex-wrap gap-3">
+          <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, marginBottom: '10px' }}>
+            Languages
+          </label>
+          <div className="flex flex-wrap gap-2">
             {LANGUAGES.map(lang => (
-              <label key={lang} className="flex items-center gap-2 text-sm cursor-pointer">
-                <input type="checkbox" name="languages" value={lang} className="rounded" />
+              <label key={lang} style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.875rem', cursor: 'pointer', padding: '6px 14px', border: '1px solid var(--border)', borderRadius: '999px', background: 'white' }}>
+                <input type="checkbox" name="languages" value={lang} style={{ accentColor: 'var(--forest)' }} />
                 {lang}
               </label>
             ))}
@@ -97,18 +118,21 @@ export default function RegisterHelperPage() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium mb-2">Tell us a bit about yourself (optional)</label>
+          <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, marginBottom: '8px' }}>
+            Tell us a bit about yourself <span style={{ color: 'var(--muted)', fontWeight: 400 }}>(optional)</span>
+          </label>
           <textarea
             name="about"
             rows={3}
             placeholder="Anything that helps match you to the right needs..."
-            className="w-full border border-stone-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-stone-500 bg-white resize-none"
+            style={{ width: '100%', border: '1px solid var(--border)', borderRadius: '12px', padding: '12px 16px', fontSize: '0.95rem', background: 'white', outline: 'none', resize: 'none' }}
           />
         </div>
 
         <button
           type="submit"
-          className="w-full bg-stone-900 text-white py-4 rounded-lg font-medium hover:bg-stone-700 transition-colors"
+          style={{ width: '100%', background: 'var(--forest)', color: 'white', padding: '16px', borderRadius: '999px', fontSize: '1rem', fontWeight: 500, cursor: 'pointer', border: 'none' }}
+          className="hover:opacity-90 transition-opacity"
         >
           Register as a helper
         </button>

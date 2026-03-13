@@ -4,11 +4,11 @@ import { Need } from '@/lib/types'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 
-const URGENCY_COLOR: Record<string, string> = {
-  'Urgent — today/tomorrow': 'bg-red-100 text-red-700',
-  'This week': 'bg-orange-100 text-orange-700',
-  'This month': 'bg-yellow-100 text-yellow-700',
-  'Ongoing': 'bg-blue-100 text-blue-700',
+const URGENCY_STYLE: Record<string, { bg: string; color: string }> = {
+  'Urgent — today/tomorrow': { bg: '#fde8e8', color: '#b91c1c' },
+  'This week':               { bg: '#fef3d0', color: '#92400e' },
+  'This month':              { bg: '#e8f4ee', color: '#166534' },
+  'Ongoing':                 { bg: '#e0effe', color: '#1e40af' },
 }
 
 export default async function NeedPage({
@@ -31,129 +31,157 @@ export default async function NeedPage({
   if (!need) notFound()
 
   const n = need as Need
+  const isClosed = n.pipeline === 'Fulfilled' || n.pipeline === 'Closed'
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-10">
-      <Link href="/needs" className="text-sm text-stone-400 hover:text-stone-600 transition-colors mb-6 inline-block">
+    <div className="max-w-2xl mx-auto px-5 py-12">
+      <Link href="/needs" style={{ color: 'var(--muted)', fontSize: '0.875rem' }} className="hover:opacity-70 transition-opacity mb-8 inline-flex items-center gap-1">
         ← Back to all needs
       </Link>
 
       {sp.helped && (
-        <div className="mb-6 bg-green-50 border border-green-200 rounded-lg p-4 text-green-800 text-sm">
-          Thank you. The contact details have been shared and you&apos;ll hear back soon.
+        <div style={{ background: '#e8f4ee', border: '1px solid #86efac', borderRadius: '12px', color: '#166534', marginBottom: '24px' }} className="p-4 text-sm">
+          Thank you. Your details have been shared and you&apos;ll hear back soon. This matters.
         </div>
       )}
 
-      <div className="bg-white border border-stone-200 rounded-xl p-6 mb-8">
+      {/* Need card */}
+      <div style={{ background: 'white', border: '1px solid var(--border)', borderRadius: '20px', padding: '28px', marginBottom: '32px' }}>
         <div className="flex items-start justify-between gap-4 mb-4">
-          <h1 className="text-2xl font-bold leading-tight">{n.title}</h1>
-          {n.urgency && (
-            <span className={`shrink-0 text-xs px-2 py-1 rounded-full font-medium ${URGENCY_COLOR[n.urgency] || 'bg-stone-100 text-stone-600'}`}>
+          <h1 style={{ fontFamily: 'Fraunces, serif', fontSize: '1.8rem', fontWeight: 400, color: 'var(--forest-dark)', lineHeight: 1.2 }}>
+            {n.title}
+          </h1>
+          {n.urgency && URGENCY_STYLE[n.urgency] && (
+            <span style={{ ...URGENCY_STYLE[n.urgency], borderRadius: '999px', fontSize: '0.75rem', padding: '4px 12px', fontWeight: 600, whiteSpace: 'nowrap', flexShrink: 0 }}>
               {n.urgency}
             </span>
           )}
         </div>
 
         {n.description && (
-          <p className="text-stone-600 leading-relaxed mb-6">{n.description}</p>
+          <p style={{ color: 'var(--muted)', lineHeight: 1.7, marginBottom: '24px' }}>{n.description}</p>
         )}
 
-        <div className="grid grid-cols-2 gap-3 text-sm">
+        <div className="grid grid-cols-2 gap-4 text-sm mb-4">
           {n.area && (
             <div>
-              <span className="text-stone-400 text-xs uppercase tracking-wide">Area</span>
-              <p className="font-medium">{n.area}</p>
+              <p style={{ color: 'var(--muted)', fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '2px' }}>Area</p>
+              <p style={{ fontWeight: 500 }}>{n.area}</p>
             </div>
           )}
           {n.location && (
             <div>
-              <span className="text-stone-400 text-xs uppercase tracking-wide">Location</span>
-              <p className="font-medium">{n.location}</p>
+              <p style={{ color: 'var(--muted)', fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '2px' }}>Location</p>
+              <p style={{ fontWeight: 500 }}>{n.location}</p>
             </div>
           )}
           {n.time_required && (
             <div>
-              <span className="text-stone-400 text-xs uppercase tracking-wide">Time needed</span>
-              <p className="font-medium">{n.time_required}</p>
+              <p style={{ color: 'var(--muted)', fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '2px' }}>Time needed</p>
+              <p style={{ fontWeight: 500 }}>{n.time_required}</p>
             </div>
           )}
           {n.helpers_needed && (
             <div>
-              <span className="text-stone-400 text-xs uppercase tracking-wide">Helpers needed</span>
-              <p className="font-medium">{n.helpers_needed}</p>
+              <p style={{ color: 'var(--muted)', fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '2px' }}>Helpers needed</p>
+              <p style={{ fontWeight: 500 }}>{n.helpers_needed}</p>
             </div>
           )}
         </div>
 
         {n.category && n.category.length > 0 && (
-          <div className="flex flex-wrap gap-2 mt-4">
+          <div className="flex flex-wrap gap-2 mb-4">
             {n.category.map(cat => (
-              <span key={cat} className="bg-stone-100 text-stone-600 text-xs px-2 py-1 rounded-full">{cat}</span>
+              <span key={cat} style={{ background: 'var(--amber-light)', color: '#92400e', borderRadius: '999px', fontSize: '0.75rem', padding: '4px 12px' }}>
+                {cat}
+              </span>
             ))}
           </div>
         )}
 
-        <p className="text-xs text-stone-400 mt-4">
+        <p style={{ fontSize: '0.75rem', color: 'var(--muted)', borderTop: '1px solid var(--border)', paddingTop: '12px', marginTop: '8px' }}>
           Posted {new Date(n.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
-          {n.contact_name && ` by ${n.contact_name}`}
+          {n.contact_name && ` · ${n.contact_name}`}
         </p>
       </div>
 
-      {n.pipeline !== 'Fulfilled' && n.pipeline !== 'Closed' ? (
+      {/* Help form or fulfilled */}
+      {!isClosed ? (
         <div>
-          <h2 className="text-xl font-semibold mb-2">I can help with this</h2>
-          <p className="text-stone-500 text-sm mb-6">Leave your details and the person who posted this will get in touch directly.</p>
+          <h2 style={{ fontFamily: 'Fraunces, serif', fontSize: '1.6rem', fontWeight: 400, color: 'var(--forest-dark)', marginBottom: '8px' }}>
+            I can help with this
+          </h2>
+          <p style={{ color: 'var(--muted)', fontSize: '0.9rem', marginBottom: '24px', lineHeight: 1.5 }}>
+            Leave your details and the person who posted this will get in touch directly on WhatsApp.
+          </p>
 
           <form action={respondToNeed} className="space-y-4">
             <input type="hidden" name="need_id" value={n.id} />
             <div>
-              <label className="block text-sm font-medium mb-2">Your name *</label>
+              <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, marginBottom: '8px' }}>
+                Your name <span style={{ color: 'var(--terra)' }}>*</span>
+              </label>
               <input
                 name="helper_name"
                 required
                 placeholder="First name is fine"
-                className="w-full border border-stone-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-stone-500 bg-white"
+                style={{ width: '100%', border: '1px solid var(--border)', borderRadius: '12px', padding: '12px 16px', fontSize: '0.95rem', background: 'white', outline: 'none' }}
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-2">WhatsApp *</label>
+              <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, marginBottom: '8px' }}>
+                WhatsApp <span style={{ color: 'var(--terra)' }}>*</span>
+              </label>
               <input
                 name="helper_whatsapp"
                 required
                 placeholder="+351..."
-                className="w-full border border-stone-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-stone-500 bg-white"
+                style={{ width: '100%', border: '1px solid var(--border)', borderRadius: '12px', padding: '12px 16px', fontSize: '0.95rem', background: 'white', outline: 'none' }}
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-2">Email (optional)</label>
+              <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, marginBottom: '8px' }}>
+                Email <span style={{ color: 'var(--muted)', fontWeight: 400 }}>(optional)</span>
+              </label>
               <input
                 name="helper_email"
                 type="email"
                 placeholder="your@email.com"
-                className="w-full border border-stone-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-stone-500 bg-white"
+                style={{ width: '100%', border: '1px solid var(--border)', borderRadius: '12px', padding: '12px 16px', fontSize: '0.95rem', background: 'white', outline: 'none' }}
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-2">Message (optional)</label>
+              <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, marginBottom: '8px' }}>
+                Message <span style={{ color: 'var(--muted)', fontWeight: 400 }}>(optional)</span>
+              </label>
               <textarea
                 name="message"
                 rows={3}
-                placeholder="Anything useful to know — when you&apos;re available, what you can bring, etc."
-                className="w-full border border-stone-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-stone-500 bg-white resize-none"
+                placeholder="When you're available, what you can bring, anything useful..."
+                style={{ width: '100%', border: '1px solid var(--border)', borderRadius: '12px', padding: '12px 16px', fontSize: '0.95rem', background: 'white', outline: 'none', resize: 'none' }}
               />
             </div>
             <button
               type="submit"
-              className="w-full bg-stone-900 text-white py-4 rounded-lg font-medium hover:bg-stone-700 transition-colors"
+              style={{ width: '100%', background: 'var(--forest)', color: 'white', padding: '16px', borderRadius: '999px', fontSize: '1rem', fontWeight: 500, cursor: 'pointer', border: 'none' }}
+              className="hover:opacity-90 transition-opacity"
             >
-              I&apos;ll help with this
+              I&apos;ll show up for this
             </button>
           </form>
         </div>
       ) : (
-        <div className="text-center py-8 text-stone-400">
-          <p>This need has been fulfilled. Thank you to everyone who showed up.</p>
-          <Link href="/needs" className="text-sm underline mt-2 inline-block">See other needs</Link>
+        <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--muted)' }}>
+          <p style={{ fontFamily: 'Fraunces, serif', fontSize: '1.2rem', marginBottom: '8px' }}>
+            This need has been fulfilled.
+          </p>
+          <p className="text-sm mb-6">Thank you to everyone who showed up.</p>
+          <Link
+            href="/needs"
+            style={{ border: '1px solid var(--border)', color: 'var(--warm-text)', borderRadius: '999px', padding: '10px 24px', fontSize: '0.9rem' }}
+          >
+            See other needs
+          </Link>
         </div>
       )}
     </div>
