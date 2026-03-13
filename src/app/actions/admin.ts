@@ -54,6 +54,13 @@ export async function updateHelperModeration(id: string, moderation_status: stri
   revalidatePath('/admin/helpers')
 }
 
+export async function unassignNeed(id: string) {
+  await dbUpdate('needs', id, { pipeline: 'Open' })
+  revalidatePath('/admin/needs')
+  revalidatePath(`/admin/needs/${id}`)
+  revalidatePath('/needs')
+}
+
 export async function acceptResponse(responseId: string, needId: string) {
   await dbUpdate('helper_responses', responseId, { status: 'accepted' })
   await dbUpdate('needs', needId, { pipeline: 'Helper assigned' })

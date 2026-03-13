@@ -1,5 +1,5 @@
 import { dbAdminSelect } from '@/lib/supabase/fetch'
-import { updateNeedPipeline, updateNeedModeration } from '@/app/actions/admin'
+import { updateNeedPipeline, updateNeedModeration, unassignNeed } from '@/app/actions/admin'
 import { Need } from '@/lib/types'
 
 const PIPELINE_COLOURS: Record<string, { bg: string; color: string }> = {
@@ -106,6 +106,11 @@ export default async function AdminNeeds({
                         {need.pipeline === 'Open' && (
                           <form action={async () => { 'use server'; await updateNeedPipeline(need.id, 'Helper assigned') }}>
                             <button type="submit" style={{ fontSize: '0.72rem', padding: '4px 10px', borderRadius: '999px', border: '1px solid #93c5fd', background: '#eff6ff', color: '#1e40af', cursor: 'pointer' }}>Assign helper</button>
+                          </form>
+                        )}
+                        {need.pipeline === 'Helper assigned' && (
+                          <form action={async () => { 'use server'; await unassignNeed(need.id) }}>
+                            <button type="submit" style={{ fontSize: '0.72rem', padding: '4px 10px', borderRadius: '999px', border: '1px solid #93c5fd', background: 'white', color: '#1e40af', cursor: 'pointer' }}>↩ Unassign</button>
                           </form>
                         )}
                         {need.pipeline !== 'Fulfilled' && need.pipeline !== 'Closed' && (

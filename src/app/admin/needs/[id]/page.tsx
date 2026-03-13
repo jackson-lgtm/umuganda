@@ -1,7 +1,12 @@
 import { dbAdminSelect } from '@/lib/supabase/fetch'
-import { acceptResponse, declineResponse, markFulfilledAndVerify } from '@/app/actions/admin'
-import { Need, HelperResponse } from '@/lib/types'
-import { matchToVolunteer, matchToPoster, verifyToPoster, verifyToVolunteer } from '@/lib/whatsapp'
+import { acceptResponse, declineResponse, markFulfilledAndVerify, unassignNeed } from '@/app/actions/admin'
+import { Need, Helper, HelperResponse } from '@/lib/types'
+import {
+  matchToVolunteer, matchToPoster,
+  verifyToPoster, verifyToVolunteer,
+  indirectMatchSameArea, indirectMatchSameSkill,
+  relevantSkillsForNeed,
+} from '@/lib/whatsapp'
 import { notFound } from 'next/navigation'
 
 interface HelperResponseWithStatus extends HelperResponse {
@@ -28,10 +33,11 @@ export default async function AdminNeedDetail({
 }) {
   const { id } = await params
 
-  const [needs, responses, verifications] = await Promise.all([
+  const [needs, responses, verifications, allHelpers] = await Promise.all([
     dbAdminSelect<Need>('needs', { 'id': `eq.${id}` }),
     dbAdminSelect<HelperResponseWithStatus>('helper_responses', { need_id: `eq.${id}`, order: 'created_at.asc' }),
     dbAdminSelect<Verification>('task_verifications', { need_id: `eq.${id}` }),
+    dbAdminSelect<Helper>('helpers', { pipeline: 'eq.Active', moderation_status: 'eq.live', order: 'created_at.desc' }),
   ])
 
   const need = needs[0]
@@ -40,8 +46,26 @@ export default async function AdminNeedDetail({
   const acceptedResponse = responses.find(r => r.status === 'accepted')
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://umuganda.vercel.app'
 
+  // ── Smart pairing ────────────────────────────────────────────
+  const relevantSkills = relevantSkillsForNeed(need.category ?? [])
+  const respondedIds = new Set(responses.map(r => r.helper_whatsapp))
+
+  const directMatches: Helper[] = []
+  const indirectSameArea: Helper[] = []
+  const indirectSameSkill: Helper[] = []
+
+  for (const h of allHelpers) {
+    if (!h.whatsapp || respondedIds.has(h.whatsapp)) continue
+    const areaMatch = h.area === need.area
+    const skillMatch = relevantSkills.length === 0 || h.skills.some(s => relevantSkills.includes(s))
+
+    if (areaMatch && skillMatch) directMatches.push(h)
+    else if (areaMatch && !skillMatch) indirectSameArea.push(h)
+    else if (!areaMatch && skillMatch) indirectSameSkill.push(h)
+  }
+
   return (
-    <div style={{ padding: '40px', maxWidth: '800px' }}>
+    <div style={{ padding: '40px', maxWidth: '860px' }}>
       <a href="/admin/needs" style={{ color: 'var(--muted)', fontSize: '0.875rem', textDecoration: 'none' }}>← Back to needs</a>
 
       {/* Need summary */}
@@ -58,35 +82,97 @@ export default async function AdminNeedDetail({
         <div style={{ display: 'flex', gap: '24px', fontSize: '0.8rem', color: 'var(--muted)', flexWrap: 'wrap' }}>
           {need.area && <span>Area: <strong style={{ color: 'var(--forest-dark)' }}>{need.area}</strong></span>}
           {need.urgency && <span>Urgency: <strong style={{ color: 'var(--forest-dark)' }}>{need.urgency}</strong></span>}
+          {need.category?.length > 0 && <span>Category: <strong style={{ color: 'var(--forest-dark)' }}>{need.category.join(', ')}</strong></span>}
           {need.contact_name && <span>Posted by: <strong style={{ color: 'var(--forest-dark)' }}>{need.contact_name}</strong></span>}
           {need.contact_whatsapp && (
             <span>WhatsApp: <a href={`https://wa.me/${need.contact_whatsapp.replace(/\D/g, '')}`} target="_blank" style={{ color: 'var(--forest)', fontWeight: 500 }}>{need.contact_whatsapp}</a></span>
           )}
         </div>
 
-        {/* Mark fulfilled */}
-        {need.pipeline !== 'Fulfilled' && need.pipeline !== 'Closed' && acceptedResponse && (
-          <div style={{ marginTop: '20px', paddingTop: '16px', borderTop: '1px solid var(--border)' }}>
-            <form action={async () => { 'use server'; await markFulfilledAndVerify(need.id) }}>
-              <button type="submit" style={{ background: '#166534', color: 'white', border: 'none', borderRadius: '999px', padding: '10px 24px', fontSize: '0.875rem', fontWeight: 500, cursor: 'pointer' }}>
-                Mark fulfilled + send verification links
+        {/* Pipeline actions */}
+        <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid var(--border)', display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+          {need.pipeline === 'Helper assigned' && (
+            <form action={async () => { 'use server'; await unassignNeed(need.id) }}>
+              <button type="submit" style={{ background: 'white', color: '#1e40af', border: '1px solid #93c5fd', borderRadius: '999px', padding: '8px 18px', fontSize: '0.8rem', fontWeight: 500, cursor: 'pointer' }}>
+                ↩ Unassign helper
               </button>
             </form>
-          </div>
-        )}
+          )}
+          {need.pipeline !== 'Fulfilled' && need.pipeline !== 'Closed' && acceptedResponse && (
+            <form action={async () => { 'use server'; await markFulfilledAndVerify(need.id) }}>
+              <button type="submit" style={{ background: '#166534', color: 'white', border: 'none', borderRadius: '999px', padding: '8px 18px', fontSize: '0.8rem', fontWeight: 500, cursor: 'pointer' }}>
+                Mark fulfilled + send verification
+              </button>
+            </form>
+          )}
+        </div>
       </div>
 
-      {/* Responses */}
+      {/* Smart pairing */}
+      {(directMatches.length > 0 || indirectSameArea.length > 0 || indirectSameSkill.length > 0) && (
+        <div style={{ marginBottom: '40px' }}>
+          <h2 style={{ fontFamily: 'Fraunces, serif', fontSize: '1.3rem', fontWeight: 400, color: 'var(--forest-dark)', marginBottom: '4px' }}>
+            Suggested volunteers
+          </h2>
+          <p style={{ color: 'var(--muted)', fontSize: '0.8rem', marginBottom: '20px' }}>
+            Tap a WhatsApp button to reach out. Direct matches are same area + matching skills. Indirect are one degree away.
+          </p>
+
+          {directMatches.length > 0 && (
+            <div style={{ marginBottom: '24px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+                <span style={{ background: '#e8f4ee', color: '#166534', borderRadius: '999px', fontSize: '0.7rem', padding: '3px 10px', fontWeight: 600 }}>Direct match</span>
+                <span style={{ color: 'var(--muted)', fontSize: '0.75rem' }}>Same area + matching skills</span>
+              </div>
+              <div className="space-y-3">
+                {directMatches.slice(0, 5).map(h => (
+                  <HelperCard key={h.id} helper={h} need={need} type="direct" />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {indirectSameArea.length > 0 && (
+            <div style={{ marginBottom: '24px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+                <span style={{ background: '#fef3d0', color: '#92400e', borderRadius: '999px', fontSize: '0.7rem', padding: '3px 10px', fontWeight: 600 }}>Indirect — same area</span>
+                <span style={{ color: 'var(--muted)', fontSize: '0.75rem' }}>In {need.area}, different skills</span>
+              </div>
+              <div className="space-y-3">
+                {indirectSameArea.slice(0, 3).map(h => (
+                  <HelperCard key={h.id} helper={h} need={need} type="indirect-area" />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {indirectSameSkill.length > 0 && (
+            <div style={{ marginBottom: '24px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+                <span style={{ background: '#e0effe', color: '#1e40af', borderRadius: '999px', fontSize: '0.7rem', padding: '3px 10px', fontWeight: 600 }}>Indirect — matching skills</span>
+                <span style={{ color: 'var(--muted)', fontSize: '0.75rem' }}>Right skills, different area</span>
+              </div>
+              <div className="space-y-3">
+                {indirectSameSkill.slice(0, 3).map(h => (
+                  <HelperCard key={h.id} helper={h} need={need} type="indirect-skill" />
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Responses (people who already offered) */}
       <h2 style={{ fontFamily: 'Fraunces, serif', fontSize: '1.3rem', fontWeight: 400, color: 'var(--forest-dark)', marginBottom: '16px' }}>
-        Volunteers who offered ({responses.length})
+        Who offered to help ({responses.length})
       </h2>
 
       {responses.length === 0 ? (
-        <div style={{ background: 'white', border: '1px solid var(--border)', borderRadius: '14px', padding: '32px', textAlign: 'center', color: 'var(--muted)', fontSize: '0.875rem' }}>
-          No one has offered to help yet.
+        <div style={{ background: 'white', border: '1px solid var(--border)', borderRadius: '14px', padding: '32px', textAlign: 'center', color: 'var(--muted)', fontSize: '0.875rem', marginBottom: '40px' }}>
+          No one has offered yet — use the suggested volunteers above to reach out proactively.
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-4" style={{ marginBottom: '40px' }}>
           {responses.map(r => {
             const sStyle = STATUS_STYLE[r.status] ?? STATUS_STYLE.pending
             const introVolLink = need.contact_whatsapp && r.helper_whatsapp
@@ -124,30 +210,23 @@ export default async function AdminNeedDetail({
                 )}
 
                 <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                  {/* WhatsApp intro buttons */}
                   {introVolLink && (
                     <a href={introVolLink} target="_blank" style={{ background: '#25D366', color: 'white', borderRadius: '999px', padding: '8px 16px', fontSize: '0.8rem', fontWeight: 500, textDecoration: 'none' }}>
-                      Message volunteer on WhatsApp
+                      Message volunteer
                     </a>
                   )}
                   {introPosterLink && (
                     <a href={introPosterLink} target="_blank" style={{ background: '#128C7E', color: 'white', borderRadius: '999px', padding: '8px 16px', fontSize: '0.8rem', fontWeight: 500, textDecoration: 'none' }}>
-                      Message poster on WhatsApp
+                      Message poster
                     </a>
                   )}
-
-                  {/* Accept / decline */}
                   {r.status === 'pending' && (
                     <>
                       <form action={async () => { 'use server'; await acceptResponse(r.id, need.id) }}>
-                        <button type="submit" style={{ background: '#e8f4ee', color: '#166534', border: '1px solid #86efac', borderRadius: '999px', padding: '8px 16px', fontSize: '0.8rem', fontWeight: 500, cursor: 'pointer' }}>
-                          Accept
-                        </button>
+                        <button type="submit" style={{ background: '#e8f4ee', color: '#166534', border: '1px solid #86efac', borderRadius: '999px', padding: '8px 16px', fontSize: '0.8rem', fontWeight: 500, cursor: 'pointer' }}>Accept</button>
                       </form>
                       <form action={async () => { 'use server'; await declineResponse(r.id, need.id) }}>
-                        <button type="submit" style={{ background: '#fee2e2', color: '#991b1b', border: '1px solid #fca5a5', borderRadius: '999px', padding: '8px 16px', fontSize: '0.8rem', fontWeight: 500, cursor: 'pointer' }}>
-                          Decline
-                        </button>
+                        <button type="submit" style={{ background: '#fee2e2', color: '#991b1b', border: '1px solid #fca5a5', borderRadius: '999px', padding: '8px 16px', fontSize: '0.8rem', fontWeight: 500, cursor: 'pointer' }}>Decline</button>
                       </form>
                     </>
                   )}
@@ -160,7 +239,7 @@ export default async function AdminNeedDetail({
 
       {/* Verifications */}
       {verifications.length > 0 && (
-        <div style={{ marginTop: '40px' }}>
+        <div>
           <h2 style={{ fontFamily: 'Fraunces, serif', fontSize: '1.3rem', fontWeight: 400, color: 'var(--forest-dark)', marginBottom: '16px' }}>
             Verification links
           </h2>
@@ -186,7 +265,7 @@ export default async function AdminNeedDetail({
                       {v.flagged && ' · Flagged'}
                     </p>
                   </div>
-                  <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                  <div style={{ display: 'flex', gap: '8px' }}>
                     <a href={verifyUrl} target="_blank" style={{ border: '1px solid var(--border)', borderRadius: '999px', padding: '6px 14px', fontSize: '0.75rem', color: 'var(--muted)', textDecoration: 'none' }}>
                       View form
                     </a>
@@ -201,6 +280,48 @@ export default async function AdminNeedDetail({
             })}
           </div>
         </div>
+      )}
+    </div>
+  )
+}
+
+function HelperCard({ helper, need, type }: { helper: Helper; need: Need; type: 'direct' | 'indirect-area' | 'indirect-skill' }) {
+  const waLink = type === 'direct' && need.contact_whatsapp
+    ? matchToVolunteer(
+        { name: helper.name, whatsapp: helper.whatsapp! },
+        { name: need.contact_name ?? 'the poster', whatsapp: need.contact_whatsapp },
+        need.title, need.area ?? ''
+      )
+    : type === 'indirect-area'
+    ? indirectMatchSameArea(
+        { name: helper.name, whatsapp: helper.whatsapp!, skills: helper.skills },
+        need.title, need.area ?? ''
+      )
+    : indirectMatchSameSkill(
+        { name: helper.name, whatsapp: helper.whatsapp!, area: helper.area ?? '' },
+        need.title, need.area ?? ''
+      )
+
+  return (
+    <div style={{ background: 'white', border: '1px solid var(--border)', borderRadius: '12px', padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap' }}>
+      <div>
+        <p style={{ fontWeight: 500, color: 'var(--forest-dark)', marginBottom: '4px', fontSize: '0.9rem' }}>{helper.name}</p>
+        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
+          {helper.area && (
+            <span style={{ fontSize: '0.72rem', color: helper.area === need.area ? '#166534' : 'var(--muted)', background: helper.area === need.area ? '#e8f4ee' : '#f3f4f6', borderRadius: '999px', padding: '2px 8px' }}>
+              {helper.area}
+            </span>
+          )}
+          {helper.skills.slice(0, 3).map(s => (
+            <span key={s} style={{ fontSize: '0.72rem', color: '#92400e', background: 'var(--amber-light)', borderRadius: '999px', padding: '2px 8px' }}>{s}</span>
+          ))}
+          {helper.whatsapp && <span style={{ fontSize: '0.72rem', color: 'var(--muted)' }}>{helper.whatsapp}</span>}
+        </div>
+      </div>
+      {helper.whatsapp && (
+        <a href={waLink} target="_blank" style={{ background: '#25D366', color: 'white', borderRadius: '999px', padding: '8px 16px', fontSize: '0.8rem', fontWeight: 500, textDecoration: 'none', whiteSpace: 'nowrap', flexShrink: 0 }}>
+          Message on WhatsApp
+        </a>
       )}
     </div>
   )
