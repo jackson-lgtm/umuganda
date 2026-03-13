@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+import { dbSelectOne } from '@/lib/supabase/fetch'
 import { respondToNeed } from '@/app/actions/needs'
 import { Need } from '@/lib/types'
 import Link from 'next/link'
@@ -20,17 +20,10 @@ export default async function NeedPage({
 }) {
   const { id } = await params
   const sp = await searchParams
-  const supabase = await createClient()
 
-  const { data: need } = await supabase
-    .from('needs')
-    .select('*')
-    .eq('id', id)
-    .single()
+  const n = await dbSelectOne<Need>('needs', { 'id': `eq.${id}` })
 
-  if (!need) notFound()
-
-  const n = need as Need
+  if (!n) notFound()
   const isClosed = n.pipeline === 'Fulfilled' || n.pipeline === 'Closed'
 
   return (

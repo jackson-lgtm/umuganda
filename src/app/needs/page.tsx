@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+import { dbSelect } from '@/lib/supabase/fetch'
 import { Need, AREAS } from '@/lib/types'
 import Link from 'next/link'
 
@@ -15,17 +15,14 @@ export default async function NeedsPage({
   searchParams: Promise<{ area?: string; submitted?: string; registered?: string }>
 }) {
   const params = await searchParams
-  const supabase = await createClient()
 
-  let query = supabase
-    .from('needs')
-    .select('*')
-    .eq('pipeline', 'Open')
-    .order('created_at', { ascending: false })
+  const qp: Record<string, string> = {
+    pipeline: 'eq.Open',
+    order: 'created_at.desc',
+  }
+  if (params.area) qp['area'] = `eq.${params.area}`
 
-  if (params.area) query = query.eq('area', params.area)
-
-  const { data: needs } = await query
+  const needs = await dbSelect<Need>('needs', qp)
 
   return (
     <div className="max-w-5xl mx-auto px-5 py-10">
@@ -47,7 +44,7 @@ export default async function NeedsPage({
             Open needs
           </h1>
           <p style={{ color: 'var(--muted)', marginTop: '6px', fontSize: '0.95rem' }}>
-            {needs?.length ?? 0} {needs?.length === 1 ? 'person or project' : 'people and projects'} looking for help right now
+            {needs.length} {needs.length === 1 ? 'person or project' : 'people and projects'} looking for help right now
           </p>
         </div>
         <Link
@@ -91,7 +88,7 @@ export default async function NeedsPage({
       </div>
 
       {/* Needs list */}
-      {!needs || needs.length === 0 ? (
+      {needs.length === 0 ? (
         <div className="text-center py-24" style={{ color: 'var(--muted)' }}>
           <p style={{ fontFamily: 'Fraunces, serif', fontSize: '1.4rem', fontWeight: 300, marginBottom: '8px' }}>
             No open needs right now.

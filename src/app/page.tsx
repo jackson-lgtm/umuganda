@@ -1,12 +1,8 @@
 import Link from 'next/link'
-import { createClient } from '@/lib/supabase/server'
+import { dbCount } from '@/lib/supabase/fetch'
 
 export default async function Home() {
-  const supabase = await createClient()
-  const { count: needsCount } = await supabase
-    .from('needs')
-    .select('*', { count: 'exact', head: true })
-    .eq('pipeline', 'Open')
+  const needsCount = await dbCount('needs', { pipeline: 'eq.Open' })
 
   return (
     <div>
@@ -61,7 +57,7 @@ export default async function Home() {
         <div className="max-w-5xl mx-auto px-4 sm:px-5 py-3 flex items-center gap-3 text-sm flex-wrap">
           <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--terra)', display: 'inline-block', flexShrink: 0 }} className="animate-pulse" />
           <span style={{ color: 'var(--warm-text)', fontWeight: 500 }}>
-            {needsCount && needsCount > 0
+            {needsCount > 0
               ? `${needsCount} ${needsCount === 1 ? 'need' : 'needs'} open right now near you.`
               : 'No open needs right now — be the first to post one.'}
           </span>
