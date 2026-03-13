@@ -5,9 +5,15 @@ import { Need, HelperResponse } from '@/lib/types'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 
-export default async function ProfilePage() {
+export default async function ProfilePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ welcome?: string }>
+}) {
   const user = await getUser()
   if (!user) redirect('/signin?redirect=/profile')
+
+  const { welcome } = await searchParams
 
   const fullName = user.user_metadata?.full_name ?? user.email
   const phone = user.user_metadata?.phone
@@ -19,6 +25,12 @@ export default async function ProfilePage() {
 
   return (
     <div className="max-w-2xl mx-auto px-5 py-12">
+      {welcome && (
+        <div style={{ background: '#e8f4ee', border: '1px solid #86efac', borderRadius: '14px', padding: '16px 20px', marginBottom: '32px' }}>
+          <p style={{ fontWeight: 600, color: '#166534', marginBottom: '4px' }}>Welcome to Umuganda.</p>
+          <p style={{ color: '#166534', fontSize: '0.875rem' }}>Your account is confirmed. Browse needs, offer your skills, or post something your community can help with.</p>
+        </div>
+      )}
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '40px' }}>
         <div>
           <h1 style={{ fontFamily: 'Fraunces, serif', fontSize: '2rem', fontWeight: 400, color: 'var(--forest-dark)', marginBottom: '4px' }}>

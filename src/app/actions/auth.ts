@@ -33,7 +33,7 @@ export async function register(formData: FormData) {
     redirect('/profile')
   }
 
-  redirect('/signin?message=Check+your+email+to+confirm+your+account')
+  redirect(`/signup/check-email?email=${encodeURIComponent(email)}`)
 }
 
 export async function login(formData: FormData) {

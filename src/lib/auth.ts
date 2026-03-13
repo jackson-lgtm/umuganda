@@ -31,10 +31,16 @@ export async function getUser(): Promise<AuthUser | null> {
 }
 
 export async function authSignUp(email: string, password: string, fullName: string, phone: string) {
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://umuganda.vercel.app'
   const res = await fetch(`${URL}/auth/v1/signup`, {
     method: 'POST',
     headers: { apikey: ANON_KEY, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, password, data: { full_name: fullName, phone } }),
+    body: JSON.stringify({
+      email,
+      password,
+      data: { full_name: fullName, phone },
+      options: { emailRedirectTo: `${siteUrl}/auth/callback` },
+    }),
   })
   return res.json()
 }
