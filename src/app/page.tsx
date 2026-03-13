@@ -12,7 +12,7 @@ export default async function Home() {
     <div>
       {/* Hero — no z-index, no transforms, no stacking context that fights header */}
       <section style={{ background: 'var(--hero-bg)', position: 'relative', overflow: 'hidden' }}>
-        <div className="max-w-5xl mx-auto px-4 sm:px-5 py-16 sm:py-28">
+        <div className="max-w-5xl mx-auto px-4 sm:px-5 py-8 sm:py-14">
           <div className="max-w-2xl">
             <p style={{ color: 'var(--amber)', fontSize: '0.75rem', letterSpacing: '0.12em', textTransform: 'uppercase', fontWeight: 500 }} className="mb-4 sm:mb-5">
               Lisbon · Ericeira · Mafra · Sintra and surrounds
@@ -56,20 +56,20 @@ export default async function Home() {
         <div style={{ position: 'absolute', right: '100px', bottom: '-100px', width: '250px', height: '250px', borderRadius: '50%', background: 'rgba(255,200,80,0.12)', pointerEvents: 'none' }} />
       </section>
 
-      {/* Live count strip */}
-      {needsCount !== null && needsCount > 0 && (
-        <div style={{ background: 'var(--amber-light)', borderBottom: '1px solid var(--border)' }}>
-          <div className="max-w-5xl mx-auto px-4 sm:px-5 py-3 flex items-center gap-3 text-sm flex-wrap">
-            <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--terra)', display: 'inline-block', flexShrink: 0 }} className="animate-pulse" />
-            <span style={{ color: 'var(--warm-text)', fontWeight: 500 }}>
-              {needsCount} {needsCount === 1 ? 'need' : 'needs'} open right now near you.
-            </span>
-            <Link href="/needs" style={{ color: 'var(--forest)', fontWeight: 600 }} className="hover:opacity-70 transition-opacity whitespace-nowrap">
-              See them →
-            </Link>
-          </div>
+      {/* Live count strip — always visible */}
+      <div style={{ background: 'var(--amber-light)', borderBottom: '1px solid var(--border)' }}>
+        <div className="max-w-5xl mx-auto px-4 sm:px-5 py-3 flex items-center gap-3 text-sm flex-wrap">
+          <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--terra)', display: 'inline-block', flexShrink: 0 }} className="animate-pulse" />
+          <span style={{ color: 'var(--warm-text)', fontWeight: 500 }}>
+            {needsCount && needsCount > 0
+              ? `${needsCount} ${needsCount === 1 ? 'need' : 'needs'} open right now near you.`
+              : 'No open needs right now — be the first to post one.'}
+          </span>
+          <Link href="/needs" style={{ color: 'var(--forest)', fontWeight: 600 }} className="hover:opacity-70 transition-opacity whitespace-nowrap">
+            See them →
+          </Link>
         </div>
-      )}
+      </div>
 
       {/* How it works */}
       <section className="max-w-5xl mx-auto px-4 sm:px-5 py-12 sm:py-20">
