@@ -59,8 +59,8 @@ export default async function NeedsPage({
         </Link>
       </div>
 
-      {/* Area filters */}
-      <div className="flex flex-wrap gap-2 mb-8">
+      {/* Area filters — scroll horizontally on mobile */}
+      <div className="flex gap-2 mb-8 overflow-x-auto pb-1 -mx-4 px-4 sm:mx-0 sm:px-0 sm:flex-wrap scrollbar-none">
         <a
           href="/needs"
           style={{
@@ -69,7 +69,7 @@ export default async function NeedsPage({
             border: `1px solid ${!params.area ? 'var(--forest)' : 'var(--border)'}`,
             borderRadius: '999px', padding: '6px 16px', fontSize: '0.85rem', fontWeight: 500
           }}
-          className="hover:opacity-80 transition-opacity"
+          className="hover:opacity-80 transition-opacity shrink-0"
         >
           All areas
         </a>
@@ -83,7 +83,7 @@ export default async function NeedsPage({
               border: `1px solid ${params.area === area ? 'var(--forest)' : 'var(--border)'}`,
               borderRadius: '999px', padding: '6px 16px', fontSize: '0.85rem'
             }}
-            className="hover:opacity-80 transition-opacity"
+            className="hover:opacity-80 transition-opacity shrink-0"
           >
             {area}
           </a>

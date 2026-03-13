@@ -26,3 +26,11 @@ body {
 h1, h2, h3 {
   font-family: 'Fraunces', Georgia, serif;
 }
+
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
