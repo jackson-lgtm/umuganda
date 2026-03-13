@@ -48,14 +48,14 @@ export default async function AdminNeedDetail({
 
   // ── Smart pairing ────────────────────────────────────────────
   const relevantSkills = relevantSkillsForNeed(need.category ?? [])
-  const respondedIds = new Set(responses.map(r => r.helper_whatsapp))
+  const respondedWhatsapps = new Set(responses.map(r => r.helper_whatsapp))
 
   const directMatches: Helper[] = []
   const indirectSameArea: Helper[] = []
   const indirectSameSkill: Helper[] = []
 
   for (const h of allHelpers) {
-    if (!h.whatsapp || respondedIds.has(h.whatsapp)) continue
+    if (!h.whatsapp) continue
     const areaMatch = h.area === need.area
     const skillMatch = relevantSkills.length === 0 || h.skills.some(s => relevantSkills.includes(s))
 
@@ -126,7 +126,7 @@ export default async function AdminNeedDetail({
               </div>
               <div className="space-y-3">
                 {directMatches.slice(0, 5).map(h => (
-                  <HelperCard key={h.id} helper={h} need={need} type="direct" />
+                  <HelperCard key={h.id} helper={h} need={need} type="direct" hasHelped={respondedWhatsapps.has(h.whatsapp)} />
                 ))}
               </div>
             </div>
@@ -140,7 +140,7 @@ export default async function AdminNeedDetail({
               </div>
               <div className="space-y-3">
                 {indirectSameArea.slice(0, 3).map(h => (
-                  <HelperCard key={h.id} helper={h} need={need} type="indirect-area" />
+                  <HelperCard key={h.id} helper={h} need={need} type="indirect-area" hasHelped={respondedWhatsapps.has(h.whatsapp)} />
                 ))}
               </div>
             </div>
@@ -154,7 +154,7 @@ export default async function AdminNeedDetail({
               </div>
               <div className="space-y-3">
                 {indirectSameSkill.slice(0, 3).map(h => (
-                  <HelperCard key={h.id} helper={h} need={need} type="indirect-skill" />
+                  <HelperCard key={h.id} helper={h} need={need} type="indirect-skill" hasHelped={respondedWhatsapps.has(h.whatsapp)} />
                 ))}
               </div>
             </div>
@@ -285,7 +285,7 @@ export default async function AdminNeedDetail({
   )
 }
 
-function HelperCard({ helper, need, type }: { helper: Helper; need: Need; type: 'direct' | 'indirect-area' | 'indirect-skill' }) {
+function HelperCard({ helper, need, type, hasHelped }: { helper: Helper; need: Need; type: 'direct' | 'indirect-area' | 'indirect-skill'; hasHelped?: boolean }) {
   const waLink = type === 'direct' && need.contact_whatsapp
     ? matchToVolunteer(
         { name: helper.name, whatsapp: helper.whatsapp! },
@@ -305,7 +305,14 @@ function HelperCard({ helper, need, type }: { helper: Helper; need: Need; type: 
   return (
     <div style={{ background: 'white', border: '1px solid var(--border)', borderRadius: '12px', padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap' }}>
       <div>
-        <p style={{ fontWeight: 500, color: 'var(--forest-dark)', marginBottom: '4px', fontSize: '0.9rem' }}>{helper.name}</p>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+          <p style={{ fontWeight: 500, color: 'var(--forest-dark)', fontSize: '0.9rem' }}>{helper.name}</p>
+          {hasHelped && (
+            <span style={{ background: '#f3e8ff', color: '#6b21a8', borderRadius: '999px', fontSize: '0.65rem', padding: '2px 8px', fontWeight: 600 }}>
+              helped before
+            </span>
+          )}
+        </div>
         <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
           {helper.area && (
             <span style={{ fontSize: '0.72rem', color: helper.area === need.area ? '#166534' : 'var(--muted)', background: helper.area === need.area ? '#e8f4ee' : '#f3f4f6', borderRadius: '999px', padding: '2px 8px' }}>
