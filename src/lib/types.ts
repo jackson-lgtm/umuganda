@@ -1,5 +1,6 @@
 export type Pipeline_Need = 'Open' | 'Helper assigned' | 'In progress' | 'Fulfilled' | 'Closed'
 export type Pipeline_Helper = 'New' | 'Active' | 'Paused' | 'Inactive'
+export type ModerationStatus = 'live' | 'pending_review' | 'rejected'
 export type Urgency = 'Urgent — today/tomorrow' | 'This week' | 'This month' | 'Ongoing'
 export type Area = 'Ericeira' | 'Mafra' | 'Sintra' | 'Lisbon' | 'Cascais' | 'Setubal' | 'Other'
 
@@ -58,6 +59,8 @@ export interface Need {
   contact_whatsapp: string | null
   submitted_by: string | null
   pipeline: Pipeline_Need
+  moderation_status: ModerationStatus
+  moderation_note: string | null
 }
 
 export interface Helper {
@@ -73,6 +76,8 @@ export interface Helper {
   languages: string[]
   about: string | null
   pipeline: Pipeline_Helper
+  moderation_status: ModerationStatus
+  moderation_note: string | null
 }
 
 export interface HelperResponse {
