@@ -4,6 +4,7 @@ import './globals.css'
 export const metadata: Metadata = {
   title: 'Umuganda — Community Action',
   description: 'Connecting people who want to help with communities and individuals in need. Lisbon, Ericeira, Mafra, Sintra and surrounds.',
+  icons: { icon: '/logo.svg' },
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -12,9 +13,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="min-h-screen antialiased" style={{ background: 'var(--cream)', color: 'var(--warm-text)' }}>
         <header className="sticky top-0 z-50" style={{ borderBottom: '1px solid var(--border)', background: 'rgba(255,253,247,0.95)' }}>
           <div className="max-w-5xl mx-auto px-4 sm:px-5 py-3 sm:py-4 flex items-center justify-between">
-            <a href="/" className="flex flex-col leading-none">
-              <span style={{ fontFamily: 'Fraunces, Georgia, serif', fontSize: '1.15rem', fontWeight: 400, color: 'var(--forest-dark)' }}>Umuganda</span>
-              <span style={{ fontSize: '0.6rem', color: 'var(--muted)', letterSpacing: '0.08em', textTransform: 'uppercase', marginTop: '1px' }}>Community Action</span>
+            <a href="/" className="flex items-center gap-2.5 leading-none">
+              <img src="/logo.svg" alt="" width={36} height={36} style={{ flexShrink: 0 }} />
+              <div className="flex flex-col">
+                <span style={{ fontFamily: 'Fraunces, Georgia, serif', fontSize: '1.15rem', fontWeight: 400, color: 'var(--forest-dark)' }}>Umuganda</span>
+                <span style={{ fontSize: '0.6rem', color: 'var(--muted)', letterSpacing: '0.08em', textTransform: 'uppercase', marginTop: '1px' }}>Community Action</span>
+              </div>
             </a>
             <nav className="flex items-center gap-2 sm:gap-3 text-sm">
               <a href="/needs" style={{ color: 'var(--muted)' }} className="hover:opacity-70 transition-opacity hidden sm:inline">See needs</a>
