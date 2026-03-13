@@ -90,9 +90,9 @@ export async function adminUpdatePhone(userId: string, phone: string) {
   const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
   const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!
 
-  // Update auth user metadata
+  // Update auth user metadata (PATCH merges, PUT replaces)
   await fetch(`${SUPABASE_URL}/auth/v1/admin/users/${userId}`, {
-    method: 'PUT',
+    method: 'PATCH',
     headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({ user_metadata: { phone } }),
   })
