@@ -27,10 +27,11 @@ export default async function Home() {
               Saturday of every month, everyone stops — the rich and poor, no hierarchy —
               everyone gives their time to the community. Just showing up together has rebuilt
               their nation and their communities after a period of horrific genocide.
-              <br /><br />
+            </p>
+            <p style={{ color: 'rgba(255,255,255,0.85)', lineHeight: 1.8, fontSize: '1rem' }} className="mb-8 sm:mb-10 max-w-lg">
               We take inspiration from the Rwandans, in a time where hope and action is needed
-              more than ever. Acts of service and goodwill have the power to solidify communities
-              and rebuild societies.
+              more than ever. We believe acts of service, kindness and goodwill have the power
+              to solidify communities and rebuild societies.
             </p>
             <div className="flex flex-col sm:flex-row gap-3">
               <Link
