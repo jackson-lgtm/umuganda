@@ -34,7 +34,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           </p>
           <p>Lisbon · Ericeira · Mafra · Sintra · Cascais · Setubal</p>
           <p className="mt-2" style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.5)' }}>
-            Inspired by Rwanda&apos;s tradition of community service. No religion. No obligation. Just showing up.
+            Umuganda — coming together in common purpose. Inspired by Rwanda.
           </p>
         </footer>
       </body>

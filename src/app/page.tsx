@@ -22,11 +22,15 @@ export default async function Home() {
               <em style={{ color: 'var(--amber)', fontStyle: 'italic' }}>For someone</em><br />
               who needs it.
             </h1>
-            <p style={{ color: 'rgba(255,255,255,0.75)', lineHeight: 1.7, fontSize: '1rem' }} className="mb-8 sm:mb-10 max-w-lg">
-              In Rwanda, on the last Saturday of every month, everyone stops —
-              rich and poor — and gives their time to the community.
-              No obligation. No hierarchy. Just showing up.
-              This is that, here.
+            <p style={{ color: 'rgba(255,255,255,0.85)', lineHeight: 1.8, fontSize: '1rem' }} className="mb-8 sm:mb-10 max-w-lg">
+              Umuganda means &lsquo;coming together in common purpose&rsquo;. In Rwanda, on the last
+              Saturday of every month, everyone stops — the rich and poor, no hierarchy —
+              everyone gives their time to the community. Just showing up together has rebuilt
+              their nation and their communities after a period of horrific genocide.
+              <br /><br />
+              We take inspiration from the Rwandans, in a time where hope and action is needed
+              more than ever. Acts of service and goodwill have the power to solidify communities
+              and rebuild societies.
             </p>
             <div className="flex flex-col sm:flex-row gap-3">
               <Link
