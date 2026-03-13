@@ -1,7 +1,11 @@
 import { registerHelper } from '@/app/actions/helpers'
 import { AREAS, SKILLS, AVAILABILITY, TIME_OPTIONS, LANGUAGES } from '@/lib/types'
+import { getUser } from '@/lib/auth'
+import { redirect } from 'next/navigation'
 
-export default function RegisterHelperPage() {
+export default async function RegisterHelperPage() {
+  const user = await getUser()
+  if (!user) redirect('/signin?redirect=/helpers/new')
   return (
     <div className="max-w-2xl mx-auto px-5 py-12">
       <div className="mb-10">

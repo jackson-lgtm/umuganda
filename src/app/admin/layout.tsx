@@ -3,7 +3,6 @@ import { adminLogout } from '@/app/actions/admin'
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   return (
     <div style={{ minHeight: '100vh', display: 'flex', background: '#f8f7f5' }}>
-      {/* Sidebar */}
       <aside style={{ width: '220px', background: 'var(--forest-dark)', flexShrink: 0, display: 'flex', flexDirection: 'column' }}>
         <div style={{ padding: '24px 20px 20px' }}>
           <a href="/" style={{ display: 'flex', alignItems: 'center', gap: '10px', textDecoration: 'none' }}>
@@ -21,39 +20,29 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             { href: '/admin/needs', label: 'Needs' },
             { href: '/admin/helpers', label: 'Helpers' },
             { href: '/admin/responses', label: 'Responses' },
+            { href: '/admin/scout', label: 'Scout' },
+            { href: '/admin/documents', label: 'Documents' },
+            { href: '/admin/flags', label: 'Flags' },
           ].map(({ href, label }) => (
-            <a
-              key={href}
-              href={href}
-              style={{ display: 'block', padding: '9px 12px', borderRadius: '8px', color: 'rgba(255,255,255,0.75)', fontSize: '0.875rem', marginBottom: '2px', textDecoration: 'none' }}
-            >
+            <a key={href} href={href} style={{ display: 'block', padding: '9px 12px', borderRadius: '8px', color: 'rgba(255,255,255,0.75)', fontSize: '0.875rem', marginBottom: '2px', textDecoration: 'none' }}>
               {label}
             </a>
           ))}
         </nav>
 
         <div style={{ padding: '16px 12px' }}>
-          <a
-            href="/needs"
-            style={{ display: 'block', padding: '9px 12px', color: 'rgba(255,255,255,0.45)', fontSize: '0.8rem', textDecoration: 'none', marginBottom: '4px' }}
-          >
+          <a href="/needs" style={{ display: 'block', padding: '9px 12px', color: 'rgba(255,255,255,0.45)', fontSize: '0.8rem', textDecoration: 'none', marginBottom: '4px' }}>
             ← View site
           </a>
           <form action={adminLogout}>
-            <button
-              type="submit"
-              style={{ background: 'none', border: 'none', padding: '9px 12px', color: 'rgba(255,255,255,0.45)', fontSize: '0.8rem', cursor: 'pointer', width: '100%', textAlign: 'left' }}
-            >
+            <button type="submit" style={{ background: 'none', border: 'none', padding: '9px 12px', color: 'rgba(255,255,255,0.45)', fontSize: '0.8rem', cursor: 'pointer', width: '100%', textAlign: 'left' }}>
               Sign out
             </button>
           </form>
         </div>
       </aside>
 
-      {/* Main */}
-      <main style={{ flex: 1, overflow: 'auto' }}>
-        {children}
-      </main>
+      <main style={{ flex: 1, overflow: 'auto' }}>{children}</main>
     </div>
   )
 }

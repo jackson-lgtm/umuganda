@@ -1,5 +1,7 @@
 import type { Metadata } from 'next'
 import './globals.css'
+import { getUser } from '@/lib/auth'
+import { logout } from '@/app/actions/auth'
 
 export const metadata: Metadata = {
   title: 'Umuganda — Community Action',
@@ -7,7 +9,10 @@ export const metadata: Metadata = {
   icons: { icon: '/logo.svg' },
 }
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const user = await getUser()
+  const firstName = user?.user_metadata?.full_name?.split(' ')[0] ?? null
+
   return (
     <html lang="en">
       <body className="min-h-screen antialiased" style={{ background: 'var(--cream)', color: 'var(--warm-text)' }}>
@@ -23,9 +28,30 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <nav className="flex items-center gap-2 sm:gap-3 text-sm">
               <a href="/needs" style={{ color: 'var(--muted)' }} className="hover:opacity-70 transition-opacity hidden sm:inline">See needs</a>
               <a href="/needs/new" style={{ color: 'var(--muted)' }} className="hover:opacity-70 transition-opacity hidden sm:inline">Post a need</a>
-              <a href="/helpers/new" style={{ background: 'var(--forest)', color: 'white' }} className="px-3 sm:px-4 py-2 rounded-full text-xs sm:text-sm font-medium hover:opacity-90 transition-opacity whitespace-nowrap">
-                I want to help
-              </a>
+
+              {user ? (
+                <>
+                  <a href="/profile" style={{ color: 'var(--muted)' }} className="hover:opacity-70 transition-opacity hidden sm:inline">
+                    {firstName}
+                  </a>
+                  <form action={logout} style={{ display: 'inline' }}>
+                    <button type="submit" style={{ background: 'none', border: '1px solid var(--border)', borderRadius: '999px', padding: '6px 14px', fontSize: '0.8rem', color: 'var(--muted)', cursor: 'pointer' }}
+                      className="hover:opacity-70 transition-opacity hidden sm:inline-block">
+                      Sign out
+                    </button>
+                  </form>
+                  <a href="/profile" style={{ background: 'var(--forest)', color: 'white' }} className="px-3 sm:px-4 py-2 rounded-full text-xs sm:text-sm font-medium hover:opacity-90 transition-opacity whitespace-nowrap sm:hidden">
+                    {firstName ?? 'Profile'}
+                  </a>
+                </>
+              ) : (
+                <>
+                  <a href="/signin" style={{ color: 'var(--muted)' }} className="hover:opacity-70 transition-opacity hidden sm:inline">Sign in</a>
+                  <a href="/signup" style={{ background: 'var(--forest)', color: 'white' }} className="px-3 sm:px-4 py-2 rounded-full text-xs sm:text-sm font-medium hover:opacity-90 transition-opacity whitespace-nowrap">
+                    Join
+                  </a>
+                </>
+              )}
             </nav>
           </div>
         </header>

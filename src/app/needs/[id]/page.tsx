@@ -1,6 +1,7 @@
 import { dbSelectOne } from '@/lib/supabase/fetch'
 import { respondToNeed } from '@/app/actions/needs'
 import { Need } from '@/lib/types'
+import { getUser } from '@/lib/auth'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 
@@ -21,7 +22,10 @@ export default async function NeedPage({
   const { id } = await params
   const sp = await searchParams
 
-  const n = await dbSelectOne<Need>('needs', { 'id': `eq.${id}` })
+  const [n, user] = await Promise.all([
+    dbSelectOne<Need>('needs', { 'id': `eq.${id}` }),
+    getUser(),
+  ])
 
   if (!n) notFound()
   const isClosed = n.pipeline === 'Fulfilled' || n.pipeline === 'Closed'
@@ -105,10 +109,25 @@ export default async function NeedPage({
             I can help with this
           </h2>
           <p style={{ color: 'var(--muted)', fontSize: '0.9rem', marginBottom: '24px', lineHeight: 1.5 }}>
-            Leave your details and the person who posted this will get in touch directly on WhatsApp.
+            Leave your details and we&apos;ll connect you with the person who posted this need.
           </p>
 
-          <form action={respondToNeed} className="space-y-4">
+          {!user && (
+            <div style={{ background: 'var(--amber-light)', border: '1px solid var(--amber)', borderRadius: '14px', padding: '20px 24px', marginBottom: '24px' }}>
+              <p style={{ fontWeight: 500, color: '#92400e', marginBottom: '8px' }}>Sign in to respond</p>
+              <p style={{ color: '#92400e', fontSize: '0.875rem', marginBottom: '16px' }}>You need an account to offer help. It takes 30 seconds.</p>
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <Link href={`/signup?redirect=/needs/${n.id}`} style={{ background: 'var(--terra)', color: 'white', borderRadius: '999px', padding: '9px 20px', fontSize: '0.875rem', fontWeight: 500, textDecoration: 'none' }}>
+                  Create account
+                </Link>
+                <Link href={`/signin?redirect=/needs/${n.id}`} style={{ border: '1px solid #d97706', color: '#92400e', borderRadius: '999px', padding: '9px 20px', fontSize: '0.875rem', textDecoration: 'none' }}>
+                  Sign in
+                </Link>
+              </div>
+            </div>
+          )}
+
+          {user && <form action={respondToNeed} className="space-y-4">
             <input type="hidden" name="need_id" value={n.id} />
             <div>
               <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, marginBottom: '8px' }}>
@@ -161,7 +180,7 @@ export default async function NeedPage({
             >
               I&apos;ll show up for this
             </button>
-          </form>
+          </form>}
         </div>
       ) : (
         <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--muted)' }}>

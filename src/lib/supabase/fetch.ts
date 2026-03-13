@@ -59,6 +59,18 @@ export async function dbAdminCount(table: string, params: Record<string, string>
   return parseInt(count ?? '0')
 }
 
+export async function dbInsert<T>(table: string, data: Record<string, unknown>): Promise<T> {
+  const res = await fetch(`${URL}/rest/v1/${table}`, {
+    method: 'POST',
+    headers: { ...adminHeaders(), Prefer: 'return=representation' },
+    body: JSON.stringify(data),
+    cache: 'no-store',
+  })
+  if (!res.ok) throw new Error(await res.text())
+  const rows = await res.json()
+  return rows[0] as T
+}
+
 export async function dbUpdate(table: string, id: string, data: Record<string, unknown>): Promise<void> {
   const res = await fetch(`${URL}/rest/v1/${table}?id=eq.${id}`, {
     method: 'PATCH',

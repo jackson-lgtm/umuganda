@@ -1,7 +1,11 @@
 import { submitNeed } from '@/app/actions/needs'
 import { AREAS, CATEGORIES, URGENCY_OPTIONS, TIME_OPTIONS } from '@/lib/types'
+import { getUser } from '@/lib/auth'
+import { redirect } from 'next/navigation'
 
-export default function SubmitNeedPage() {
+export default async function SubmitNeedPage() {
+  const user = await getUser()
+  if (!user) redirect('/signin?redirect=/needs/new')
   return (
     <div className="max-w-2xl mx-auto px-5 py-12">
       <div className="mb-10">
