@@ -81,7 +81,7 @@ export default async function AdminNeeds({
                 return (
                   <tr key={need.id} style={{ borderBottom: i < needs.length - 1 ? '1px solid var(--border)' : 'none' }}>
                     <td style={{ padding: '14px 16px', maxWidth: '280px' }}>
-                      <a href={`/needs/${need.id}`} target="_blank" style={{ fontWeight: 500, color: 'var(--forest-dark)', fontSize: '0.875rem', textDecoration: 'none', display: 'block', marginBottom: '2px' }}>
+                      <a href={`/admin/needs/${need.id}`} style={{ fontWeight: 500, color: 'var(--forest-dark)', fontSize: '0.875rem', textDecoration: 'none', display: 'block', marginBottom: '2px' }}>
                         {need.title}
                       </a>
                       {need.contact_name && <span style={{ fontSize: '0.75rem', color: 'var(--muted)' }}>{need.contact_name}</span>}

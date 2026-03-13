@@ -129,39 +129,18 @@ export default async function NeedPage({
 
           {user && <form action={respondToNeed} className="space-y-4">
             <input type="hidden" name="need_id" value={n.id} />
-            <div>
-              <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, marginBottom: '8px' }}>
-                Your name <span style={{ color: 'var(--terra)' }}>*</span>
-              </label>
-              <input
-                name="helper_name"
-                required
-                placeholder="First name is fine"
-                style={{ width: '100%', border: '1px solid var(--border)', borderRadius: '12px', padding: '12px 16px', fontSize: '0.95rem', background: 'white', outline: 'none' }}
-              />
+
+            {/* Pre-filled from account — shown as read-only confirmation */}
+            <div style={{ background: '#f8f7f5', borderRadius: '12px', padding: '14px 16px', fontSize: '0.875rem' }}>
+              <p style={{ color: 'var(--muted)', marginBottom: '4px', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Responding as</p>
+              <p style={{ fontWeight: 500, color: 'var(--forest-dark)' }}>{user.user_metadata?.full_name ?? user.email}</p>
+              {user.user_metadata?.phone && <p style={{ color: 'var(--muted)', fontSize: '0.8rem' }}>{user.user_metadata.phone}</p>}
+              <p style={{ color: 'var(--muted)', fontSize: '0.8rem' }}>{user.email}</p>
             </div>
-            <div>
-              <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, marginBottom: '8px' }}>
-                WhatsApp <span style={{ color: 'var(--terra)' }}>*</span>
-              </label>
-              <input
-                name="helper_whatsapp"
-                required
-                placeholder="+351..."
-                style={{ width: '100%', border: '1px solid var(--border)', borderRadius: '12px', padding: '12px 16px', fontSize: '0.95rem', background: 'white', outline: 'none' }}
-              />
-            </div>
-            <div>
-              <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, marginBottom: '8px' }}>
-                Email <span style={{ color: 'var(--muted)', fontWeight: 400 }}>(optional)</span>
-              </label>
-              <input
-                name="helper_email"
-                type="email"
-                placeholder="your@email.com"
-                style={{ width: '100%', border: '1px solid var(--border)', borderRadius: '12px', padding: '12px 16px', fontSize: '0.95rem', background: 'white', outline: 'none' }}
-              />
-            </div>
+
+            <input type="hidden" name="helper_name" value={user.user_metadata?.full_name ?? user.email} />
+            <input type="hidden" name="helper_whatsapp" value={user.user_metadata?.phone ?? ''} />
+            <input type="hidden" name="helper_email" value={user.email} />
             <div>
               <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, marginBottom: '8px' }}>
                 Message <span style={{ color: 'var(--muted)', fontWeight: 400 }}>(optional)</span>
