@@ -44,6 +44,20 @@ export const URGENCY_OPTIONS: Urgency[] = [
 
 export const LANGUAGES = ['English', 'Portuguese', 'Spanish', 'French', 'Other']
 
+// Which document types are preferred/required per need category
+// Values match the doc_type values in user_documents table
+export const CATEGORY_DOC_REQUIREMENTS: Record<string, { type: string; label: string; required: boolean }[]> = {
+  'Children & youth':    [{ type: 'working_with_children', label: 'Working with Children check', required: true }],
+  'Elderly support':     [{ type: 'working_with_children', label: 'Working with Children check', required: false }, { type: 'medical', label: 'Medical qualification', required: false }],
+  'Housing & repairs':   [{ type: 'trade_licence', label: 'Trade licence', required: false }],
+  'Community spaces':    [{ type: 'trade_licence', label: 'Trade licence', required: false }],
+  'Food & hunger':       [],
+  'Environment & nature': [],
+  'Animals':             [],
+  'Events':              [],
+  'Other':               [],
+}
+
 export interface Need {
   id: string
   created_at: string
@@ -78,6 +92,18 @@ export interface Helper {
   pipeline: Pipeline_Helper
   moderation_status: ModerationStatus
   moderation_note: string | null
+  is_trusted_voucher: boolean
+}
+
+export interface UserDocument {
+  id: string
+  created_at: string
+  user_id: string
+  document_type: string
+  file_url: string
+  is_verified: boolean
+  verified_at: string | null
+  expires_at: string | null
 }
 
 export interface HelperResponse {

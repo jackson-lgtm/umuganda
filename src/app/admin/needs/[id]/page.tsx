@@ -1,6 +1,6 @@
 import { dbAdminSelect } from '@/lib/supabase/fetch'
 import { acceptResponse, declineResponse, markFulfilledAndVerify, unassignNeed } from '@/app/actions/admin'
-import { Need, Helper, HelperResponse } from '@/lib/types'
+import { Need, Helper, HelperResponse, CATEGORY_DOC_REQUIREMENTS } from '@/lib/types'
 import {
   matchToVolunteer, matchToPoster,
   verifyToPoster, verifyToVolunteer,
@@ -20,6 +20,18 @@ interface Verification {
   flagged: boolean | null
 }
 
+interface ReliabilityRow {
+  helper_email: string
+  total_verifications: number
+  positive_completions: number
+  total_rated: number
+}
+
+interface VouchCount {
+  vouchee_id: string
+  count: number
+}
+
 const STATUS_STYLE: Record<string, { bg: string; color: string }> = {
   pending:  { bg: '#fef3d0', color: '#92400e' },
   accepted: { bg: '#e8f4ee', color: '#166534' },
@@ -33,11 +45,13 @@ export default async function AdminNeedDetail({
 }) {
   const { id } = await params
 
-  const [needs, responses, verifications, allHelpers] = await Promise.all([
+  const [needs, responses, verifications, allHelpers, reliabilityRows, vouchRows] = await Promise.all([
     dbAdminSelect<Need>('needs', { 'id': `eq.${id}` }),
     dbAdminSelect<HelperResponseWithStatus>('helper_responses', { need_id: `eq.${id}`, order: 'created_at.asc' }),
     dbAdminSelect<Verification>('task_verifications', { need_id: `eq.${id}` }),
     dbAdminSelect<Helper>('helpers', { pipeline: 'eq.Active', moderation_status: 'eq.live', order: 'created_at.desc' }),
+    dbAdminSelect<ReliabilityRow>('helper_reliability', {}),
+    dbAdminSelect<{ vouchee_id: string }>('helper_vouches', { select: 'vouchee_id' }),
   ])
 
   const need = needs[0]
@@ -45,6 +59,22 @@ export default async function AdminNeedDetail({
 
   const acceptedResponse = responses.find(r => r.status === 'accepted')
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://umuganda.vercel.app'
+
+  // Build lookup maps
+  const reliabilityByEmail = new Map<string, ReliabilityRow>()
+  for (const row of reliabilityRows) reliabilityByEmail.set(row.helper_email, row)
+
+  const vouchCountById = new Map<string, number>()
+  for (const v of vouchRows) vouchCountById.set(v.vouchee_id, (vouchCountById.get(v.vouchee_id) ?? 0) + 1)
+
+  // Doc requirements for this need's categories
+  const docRequirements: { type: string; label: string; required: boolean }[] = []
+  const seen = new Set<string>()
+  for (const cat of (need.category ?? [])) {
+    for (const req of (CATEGORY_DOC_REQUIREMENTS[cat] ?? [])) {
+      if (!seen.has(req.type)) { seen.add(req.type); docRequirements.push(req) }
+    }
+  }
 
   // ── Smart pairing ────────────────────────────────────────────
   const relevantSkills = relevantSkillsForNeed(need.category ?? [])
@@ -89,6 +119,22 @@ export default async function AdminNeedDetail({
           )}
         </div>
 
+        {/* Document requirements banner */}
+        {docRequirements.length > 0 && (
+          <div style={{ marginTop: '16px', background: '#fef3d0', border: '1px solid #fde68a', borderRadius: '10px', padding: '12px 16px' }}>
+            <p style={{ fontSize: '0.8rem', fontWeight: 600, color: '#92400e', marginBottom: '4px' }}>
+              Document requirements for this category
+            </p>
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+              {docRequirements.map(req => (
+                <span key={req.type} style={{ background: req.required ? '#fde8e8' : '#fffbeb', color: req.required ? '#b91c1c' : '#92400e', border: `1px solid ${req.required ? '#fca5a5' : '#fde68a'}`, borderRadius: '999px', fontSize: '0.72rem', padding: '3px 10px' }}>
+                  {req.label}{req.required ? ' — required' : ' — preferred'}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Pipeline actions */}
         <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid var(--border)', display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
           {need.pipeline === 'Helper assigned' && (
@@ -115,7 +161,7 @@ export default async function AdminNeedDetail({
             Suggested volunteers
           </h2>
           <p style={{ color: 'var(--muted)', fontSize: '0.8rem', marginBottom: '20px' }}>
-            Tap a WhatsApp button to reach out. Direct matches are same area + matching skills. Indirect are one degree away.
+            Tap a WhatsApp button to reach out. Direct matches are same area + matching skills. Indirect are one degree away. Reliability scores are from verified task completions.
           </p>
 
           {directMatches.length > 0 && (
@@ -126,7 +172,16 @@ export default async function AdminNeedDetail({
               </div>
               <div className="space-y-3">
                 {directMatches.slice(0, 5).map(h => (
-                  <HelperCard key={h.id} helper={h} need={need} type="direct" hasHelped={respondedWhatsapps.has(h.whatsapp)} />
+                  <HelperCard
+                    key={h.id}
+                    helper={h}
+                    need={need}
+                    type="direct"
+                    hasHelped={respondedWhatsapps.has(h.whatsapp ?? '')}
+                    reliability={h.email ? reliabilityByEmail.get(h.email) : undefined}
+                    vouches={vouchCountById.get(h.id) ?? 0}
+                    docRequirements={docRequirements}
+                  />
                 ))}
               </div>
             </div>
@@ -140,7 +195,16 @@ export default async function AdminNeedDetail({
               </div>
               <div className="space-y-3">
                 {indirectSameArea.slice(0, 3).map(h => (
-                  <HelperCard key={h.id} helper={h} need={need} type="indirect-area" hasHelped={respondedWhatsapps.has(h.whatsapp)} />
+                  <HelperCard
+                    key={h.id}
+                    helper={h}
+                    need={need}
+                    type="indirect-area"
+                    hasHelped={respondedWhatsapps.has(h.whatsapp ?? '')}
+                    reliability={h.email ? reliabilityByEmail.get(h.email) : undefined}
+                    vouches={vouchCountById.get(h.id) ?? 0}
+                    docRequirements={docRequirements}
+                  />
                 ))}
               </div>
             </div>
@@ -154,7 +218,16 @@ export default async function AdminNeedDetail({
               </div>
               <div className="space-y-3">
                 {indirectSameSkill.slice(0, 3).map(h => (
-                  <HelperCard key={h.id} helper={h} need={need} type="indirect-skill" hasHelped={respondedWhatsapps.has(h.whatsapp)} />
+                  <HelperCard
+                    key={h.id}
+                    helper={h}
+                    need={need}
+                    type="indirect-skill"
+                    hasHelped={respondedWhatsapps.has(h.whatsapp ?? '')}
+                    reliability={h.email ? reliabilityByEmail.get(h.email) : undefined}
+                    vouches={vouchCountById.get(h.id) ?? 0}
+                    docRequirements={docRequirements}
+                  />
                 ))}
               </div>
             </div>
@@ -285,7 +358,23 @@ export default async function AdminNeedDetail({
   )
 }
 
-function HelperCard({ helper, need, type, hasHelped }: { helper: Helper; need: Need; type: 'direct' | 'indirect-area' | 'indirect-skill'; hasHelped?: boolean }) {
+function HelperCard({
+  helper,
+  need,
+  type,
+  hasHelped,
+  reliability,
+  vouches,
+  docRequirements,
+}: {
+  helper: Helper
+  need: Need
+  type: 'direct' | 'indirect-area' | 'indirect-skill'
+  hasHelped?: boolean
+  reliability?: { positive_completions: number; total_rated: number }
+  vouches: number
+  docRequirements: { type: string; label: string; required: boolean }[]
+}) {
   const waLink = type === 'direct' && need.contact_whatsapp
     ? matchToVolunteer(
         { name: helper.name, whatsapp: helper.whatsapp! },
@@ -302,18 +391,37 @@ function HelperCard({ helper, need, type, hasHelped }: { helper: Helper; need: N
         need.title, need.area ?? ''
       )
 
+  const reliabilityScore = reliability && reliability.total_rated > 0
+    ? Math.round((reliability.positive_completions / reliability.total_rated) * 100)
+    : null
+
   return (
     <div style={{ background: 'white', border: '1px solid var(--border)', borderRadius: '12px', padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap' }}>
-      <div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px', flexWrap: 'wrap' }}>
           <p style={{ fontWeight: 500, color: 'var(--forest-dark)', fontSize: '0.9rem' }}>{helper.name}</p>
           {hasHelped && (
             <span style={{ background: '#f3e8ff', color: '#6b21a8', borderRadius: '999px', fontSize: '0.65rem', padding: '2px 8px', fontWeight: 600 }}>
               helped before
             </span>
           )}
+          {helper.is_trusted_voucher && (
+            <span style={{ background: '#e8f4ee', color: '#166534', borderRadius: '999px', fontSize: '0.65rem', padding: '2px 8px', fontWeight: 600 }}>
+              trusted
+            </span>
+          )}
+          {vouches > 0 && (
+            <span style={{ background: '#e0effe', color: '#1e40af', borderRadius: '999px', fontSize: '0.65rem', padding: '2px 8px' }}>
+              {vouches} {vouches === 1 ? 'vouch' : 'vouches'}
+            </span>
+          )}
+          {reliabilityScore !== null && (
+            <span style={{ background: reliabilityScore >= 80 ? '#e8f4ee' : reliabilityScore >= 50 ? '#fef3d0' : '#fee2e2', color: reliabilityScore >= 80 ? '#166534' : reliabilityScore >= 50 ? '#92400e' : '#991b1b', borderRadius: '999px', fontSize: '0.65rem', padding: '2px 8px', fontWeight: 600 }}>
+              {reliabilityScore}% reliable ({reliability!.total_rated} task{reliability!.total_rated !== 1 ? 's' : ''})
+            </span>
+          )}
         </div>
-        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', alignItems: 'center' }}>
           {helper.area && (
             <span style={{ fontSize: '0.72rem', color: helper.area === need.area ? '#166534' : 'var(--muted)', background: helper.area === need.area ? '#e8f4ee' : '#f3f4f6', borderRadius: '999px', padding: '2px 8px' }}>
               {helper.area}
@@ -323,6 +431,12 @@ function HelperCard({ helper, need, type, hasHelped }: { helper: Helper; need: N
             <span key={s} style={{ fontSize: '0.72rem', color: '#92400e', background: 'var(--amber-light)', borderRadius: '999px', padding: '2px 8px' }}>{s}</span>
           ))}
           {helper.whatsapp && <span style={{ fontSize: '0.72rem', color: 'var(--muted)' }}>{helper.whatsapp}</span>}
+          {/* Flag if doc requirements not met — we don't have doc data per helper here, show requirements as reminder */}
+          {docRequirements.filter(r => r.required).length > 0 && (
+            <span style={{ fontSize: '0.65rem', color: '#92400e', background: '#fef3d0', borderRadius: '999px', padding: '2px 8px' }}>
+              check {docRequirements.filter(r => r.required).map(r => r.label).join(', ')}
+            </span>
+          )}
         </div>
       </div>
       {helper.whatsapp && (

@@ -1,5 +1,5 @@
 import { dbAdminSelect } from '@/lib/supabase/fetch'
-import { updateHelperPipeline, updateHelperModeration } from '@/app/actions/admin'
+import { updateHelperPipeline, updateHelperModeration, toggleTrustedVoucher } from '@/app/actions/admin'
 import { Helper } from '@/lib/types'
 
 const PIPELINE_COLOURS: Record<string, { bg: string; color: string }> = {
@@ -20,7 +20,14 @@ export default async function AdminHelpers({
   if (pipeline) qp['pipeline'] = `eq.${pipeline}`
   if (area) qp['area'] = `eq.${area}`
 
-  const helpers = await dbAdminSelect<Helper>('helpers', qp)
+  const [helpers, vouchRows] = await Promise.all([
+    dbAdminSelect<Helper>('helpers', qp),
+    dbAdminSelect<{ vouchee_id: string }>('helper_vouches', { select: 'vouchee_id' }),
+  ])
+
+  const vouchCountById = new Map<string, number>()
+  for (const v of vouchRows) vouchCountById.set(v.vouchee_id, (vouchCountById.get(v.vouchee_id) ?? 0) + 1)
+
   const pipelines = ['New', 'Active', 'Paused', 'Inactive']
 
   return (
@@ -47,7 +54,7 @@ export default async function AdminHelpers({
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr style={{ borderBottom: '1px solid var(--border)', background: '#fafaf9' }}>
-                {['Helper', 'Area', 'Skills', 'Contact', 'Registered', 'Status', 'Actions'].map(h => (
+                {['Helper', 'Area', 'Skills', 'Contact', 'Registered', 'Status', 'Trust', 'Actions'].map(h => (
                   <th key={h} style={{ padding: '12px 16px', textAlign: 'left', fontSize: '0.75rem', fontWeight: 600, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{h}</th>
                 ))}
               </tr>
@@ -55,10 +62,19 @@ export default async function AdminHelpers({
             <tbody>
               {helpers.map((helper, i) => {
                 const pStyle = PIPELINE_COLOURS[helper.pipeline] ?? { bg: '#f3f4f6', color: '#374151' }
+                const vouches = vouchCountById.get(helper.id) ?? 0
                 return (
                   <tr key={helper.id} style={{ borderBottom: i < helpers.length - 1 ? '1px solid var(--border)' : 'none' }}>
                     <td style={{ padding: '14px 16px' }}>
-                      <div style={{ fontWeight: 500, color: 'var(--forest-dark)', fontSize: '0.875rem' }}>{helper.name}</div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <span style={{ fontWeight: 500, color: 'var(--forest-dark)', fontSize: '0.875rem' }}>{helper.name}</span>
+                        {helper.is_trusted_voucher && (
+                          <span style={{ background: '#e8f4ee', color: '#166534', borderRadius: '999px', fontSize: '0.6rem', padding: '1px 6px', fontWeight: 600 }}>trusted</span>
+                        )}
+                        {vouches > 0 && (
+                          <span style={{ background: '#e0effe', color: '#1e40af', borderRadius: '999px', fontSize: '0.6rem', padding: '1px 6px' }}>{vouches}v</span>
+                        )}
+                      </div>
                       {helper.about && <div style={{ fontSize: '0.75rem', color: 'var(--muted)', marginTop: '2px', maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{helper.about}</div>}
                     </td>
                     <td style={{ padding: '14px 16px', fontSize: '0.8rem', color: 'var(--muted)', whiteSpace: 'nowrap' }}>{helper.area ?? '—'}</td>
@@ -81,6 +97,13 @@ export default async function AdminHelpers({
                       <span style={{ ...pStyle, borderRadius: '999px', fontSize: '0.72rem', padding: '3px 10px', fontWeight: 500 }}>
                         {helper.pipeline}
                       </span>
+                    </td>
+                    <td style={{ padding: '14px 16px' }}>
+                      <form action={async () => { 'use server'; await toggleTrustedVoucher(helper.id, helper.is_trusted_voucher) }}>
+                        <button type="submit" style={{ fontSize: '0.7rem', padding: '4px 10px', borderRadius: '999px', border: `1px solid ${helper.is_trusted_voucher ? '#86efac' : 'var(--border)'}`, background: helper.is_trusted_voucher ? '#e8f4ee' : 'white', color: helper.is_trusted_voucher ? '#166534' : 'var(--muted)', cursor: 'pointer' }}>
+                          {helper.is_trusted_voucher ? 'Trusted' : 'Mark trusted'}
+                        </button>
+                      </form>
                     </td>
                     <td style={{ padding: '14px 16px' }}>
                       <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>

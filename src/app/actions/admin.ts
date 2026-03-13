@@ -88,12 +88,19 @@ export async function markFulfilledAndVerify(needId: string) {
   revalidatePath('/needs')
 }
 
-export async function approveDocument(id: string) {
-  await dbUpdate('user_documents', id, { is_verified: true, verified_at: new Date().toISOString() })
+export async function approveDocument(id: string, expires_at?: string | null) {
+  const updates: Record<string, unknown> = { is_verified: true, verified_at: new Date().toISOString() }
+  if (expires_at) updates.expires_at = expires_at
+  await dbUpdate('user_documents', id, updates)
   revalidatePath('/admin/documents')
 }
 
 export async function rejectDocument(id: string) {
   await dbUpdate('user_documents', id, { is_verified: false, verified_at: null })
   revalidatePath('/admin/documents')
+}
+
+export async function toggleTrustedVoucher(id: string, current: boolean) {
+  await dbUpdate('helpers', id, { is_trusted_voucher: !current })
+  revalidatePath('/admin/helpers')
 }

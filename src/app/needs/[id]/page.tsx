@@ -1,6 +1,6 @@
-import { dbSelectOne } from '@/lib/supabase/fetch'
+import { dbSelectOne, dbAdminSelect } from '@/lib/supabase/fetch'
 import { respondToNeed } from '@/app/actions/needs'
-import { Need } from '@/lib/types'
+import { Need, UserDocument, CATEGORY_DOC_REQUIREMENTS } from '@/lib/types'
 import { getUser } from '@/lib/auth'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
@@ -29,6 +29,27 @@ export default async function NeedPage({
 
   if (!n) notFound()
   const isClosed = n.pipeline === 'Fulfilled' || n.pipeline === 'Closed'
+
+  // Check doc requirements for this need's categories
+  const docRequirements: { type: string; label: string; required: boolean }[] = []
+  const seenTypes = new Set<string>()
+  for (const cat of (n.category ?? [])) {
+    for (const req of (CATEGORY_DOC_REQUIREMENTS[cat] ?? [])) {
+      if (!seenTypes.has(req.type)) { seenTypes.add(req.type); docRequirements.push(req) }
+    }
+  }
+
+  // If user is logged in and there are doc requirements, check what they have
+  let userDocs: UserDocument[] = []
+  if (user && docRequirements.length > 0) {
+    userDocs = await dbAdminSelect<UserDocument>('user_documents', {
+      user_id: `eq.${user.id}`,
+      is_verified: 'eq.true',
+    })
+  }
+  const userDocTypes = new Set(userDocs.map(d => d.document_type))
+  const missingRequired = docRequirements.filter(r => r.required && !userDocTypes.has(r.type))
+  const missingPreferred = docRequirements.filter(r => !r.required && !userDocTypes.has(r.type))
 
   return (
     <div className="max-w-2xl mx-auto px-5 py-12">
@@ -111,6 +132,29 @@ export default async function NeedPage({
           <p style={{ color: 'var(--muted)', fontSize: '0.9rem', marginBottom: '24px', lineHeight: 1.5 }}>
             Leave your details and we&apos;ll connect you with the person who posted this need.
           </p>
+
+          {/* Doc requirement notices for logged-in users */}
+          {user && missingRequired.length > 0 && (
+            <div style={{ background: '#fde8e8', border: '1px solid #fca5a5', borderRadius: '14px', padding: '16px 20px', marginBottom: '20px' }}>
+              <p style={{ fontWeight: 500, color: '#b91c1c', marginBottom: '6px', fontSize: '0.875rem' }}>
+                This need requires verified documents
+              </p>
+              <p style={{ color: '#991b1b', fontSize: '0.8rem', marginBottom: '12px' }}>
+                You&apos;ll need a verified {missingRequired.map(r => r.label).join(' and ')} to help with this task.
+              </p>
+              <Link href="/profile/documents" style={{ background: '#b91c1c', color: 'white', borderRadius: '999px', padding: '8px 18px', fontSize: '0.8rem', fontWeight: 500, textDecoration: 'none' }}>
+                Upload documents
+              </Link>
+            </div>
+          )}
+          {user && missingRequired.length === 0 && missingPreferred.length > 0 && (
+            <div style={{ background: 'var(--amber-light)', border: '1px solid var(--amber)', borderRadius: '14px', padding: '16px 20px', marginBottom: '20px' }}>
+              <p style={{ color: '#92400e', fontSize: '0.8rem' }}>
+                <strong>Optional:</strong> This task suits people with a {missingPreferred.map(r => r.label).join(' or ')}.
+                If you have one, <Link href="/profile/documents" style={{ color: '#92400e', fontWeight: 600 }}>upload it here</Link> to strengthen your application.
+              </p>
+            </div>
+          )}
 
           {!user && (
             <div style={{ background: 'var(--amber-light)', border: '1px solid var(--amber)', borderRadius: '14px', padding: '20px 24px', marginBottom: '24px' }}>
