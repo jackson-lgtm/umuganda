@@ -17,6 +17,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <nav style={{ flex: 1, padding: '8px 12px' }}>
           {[
             { href: '/admin', label: 'Overview' },
+            { href: '/admin/users', label: 'Users' },
             { href: '/admin/needs', label: 'Needs' },
             { href: '/admin/helpers', label: 'Helpers' },
             { href: '/admin/responses', label: 'Responses' },
