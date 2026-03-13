@@ -39,8 +39,17 @@ export default async function SignUpPage({
           </div>
 
           <div>
-            <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, marginBottom: '6px' }}>WhatsApp / phone *</label>
-            <input name="phone" required placeholder="+351..." style={{ width: '100%', border: '1px solid var(--border)', borderRadius: '12px', padding: '12px 16px', fontSize: '0.95rem', background: 'white', outline: 'none' }} />
+            <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, marginBottom: '4px' }}>WhatsApp / phone *</label>
+            <p style={{ fontSize: '0.75rem', color: 'var(--muted)', marginBottom: '6px' }}>Include your country code — e.g. +351 912 345 678</p>
+            <input
+              name="phone"
+              type="tel"
+              required
+              placeholder="+351..."
+              pattern="^\+[0-9\s\-]{7,20}$"
+              title="Include your country code, e.g. +351 912 345 678"
+              style={{ width: '100%', border: '1px solid var(--border)', borderRadius: '12px', padding: '12px 16px', fontSize: '0.95rem', background: 'white', outline: 'none' }}
+            />
           </div>
 
           <div>

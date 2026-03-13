@@ -1,4 +1,4 @@
-import { adminResendConfirmation, resendConfirmationToAll } from '@/app/actions/auth'
+import { adminResendConfirmation, adminUpdatePhone, resendConfirmationToAll } from '@/app/actions/auth'
 
 interface AuthUser {
   id: string
@@ -78,8 +78,15 @@ export default async function AdminUsers({
                   <td style={{ padding: '14px 16px', fontSize: '0.8rem', color: 'var(--muted)' }}>
                     {user.email}
                   </td>
-                  <td style={{ padding: '14px 16px', fontSize: '0.8rem', color: 'var(--muted)' }}>
-                    {user.user_metadata?.phone ?? '—'}
+                  <td style={{ padding: '14px 16px', fontSize: '0.8rem' }}>
+                    {user.user_metadata?.phone ? (
+                      <span style={{ color: 'var(--muted)' }}>{user.user_metadata.phone}</span>
+                    ) : (
+                      <form action={async (fd: FormData) => { 'use server'; await adminUpdatePhone(user.id, fd.get('phone') as string) }} style={{ display: 'flex', gap: '4px' }}>
+                        <input name="phone" placeholder="+351..." required style={{ border: '1px solid var(--border)', borderRadius: '8px', padding: '4px 8px', fontSize: '0.75rem', width: '110px' }} />
+                        <button type="submit" style={{ fontSize: '0.7rem', padding: '4px 8px', borderRadius: '8px', border: '1px solid #86efac', background: '#f0fdf4', color: '#166534', cursor: 'pointer' }}>Save</button>
+                      </form>
+                    )}
                   </td>
                   <td style={{ padding: '14px 16px', fontSize: '0.8rem', color: 'var(--muted)', whiteSpace: 'nowrap' }}>
                     {new Date(user.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}

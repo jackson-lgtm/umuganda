@@ -86,6 +86,27 @@ export async function adminResendConfirmation(email: string) {
   revalidatePath('/admin/users')
 }
 
+export async function adminUpdatePhone(userId: string, phone: string) {
+  const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
+  const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!
+
+  // Update auth user metadata
+  await fetch(`${SUPABASE_URL}/auth/v1/admin/users/${userId}`, {
+    method: 'PUT',
+    headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ user_metadata: { phone } }),
+  })
+
+  // Update public.users table
+  await fetch(`${SUPABASE_URL}/rest/v1/users?id=eq.${userId}`, {
+    method: 'PATCH',
+    headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ phone }),
+  })
+
+  revalidatePath('/admin/users')
+}
+
 export async function resendConfirmationToAll() {
   const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
   const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!
